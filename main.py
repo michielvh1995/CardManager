@@ -1,4 +1,6 @@
-import Tools/Cards
-import Tools/DataBase
+from Tools import Window
+# import Tools/Cards
+# import Tools/DataBase
 
-# Blah.
+w = Window.Window()
+w.Run()
