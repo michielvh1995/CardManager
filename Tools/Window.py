@@ -16,3 +16,6 @@ class Window:
     def Run(self):
         # The main loop
         self.root.mainloop()
+
+a = Window()
+a.Run()
