@@ -14,6 +14,7 @@ idk yet
 
 Encrypted skiplist & hashtable
 
+![Class graph]()
 
 
 # TODO:
@@ -22,8 +23,10 @@ Encrypted skiplist & hashtable
 ## Python TODO:
 ### Tier 1:
   * Allow for return values for queries
-  * Allow for searching for a value for a field
-  * Allow for subsetting on rows
+  * Allow for SELECT queries
+    - Remove error when querying on non-existant fields
+  * Clean \"\" from the field names
+
   * Save databases/tables on the harddrive
   * Load databases from a file
   * Look into list-reordering prevention (or if this is even a thing)
@@ -34,7 +37,17 @@ Encrypted skiplist & hashtable
   * Make it into a deamon
   * Refactoring the SQL interpretation out of the main class
 
+### Tier 2.5:
+  * Data constraints
+  * WHERE clauses
+  * MAX/MIN values
+  * Sorting: ORDER/GROUP BY
+
 ### Tier 3:
   * Graphical interface
   * Blob datatype
   * Encryption
+
+### Tier 4:
+  * Foreign constraints.
+  * JOINs
