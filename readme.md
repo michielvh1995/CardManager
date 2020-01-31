@@ -17,16 +17,20 @@ Encrypted skiplist & hashtable
 ![Class graph]()
 
 
+# Changelog:
+Version 0.1.1:
+* Added SELECT queries
+* Added an ERROR class
+* Bug fixes:
+  - Now removes \" and \' from fieldnames
+
+
 # TODO:
 * Rewrite database logic in C/C++
 
 ## Python TODO:
 ### Tier 1:
   * Allow for return values for queries
-  * Allow for SELECT queries
-    - Remove error when querying on non-existant fields
-  * Clean \"\" from the field names
-
   * Save databases/tables on the harddrive
   * Load databases from a file
   * Look into list-reordering prevention (or if this is even a thing)
