@@ -18,6 +18,11 @@ Encrypted skiplist & hashtable
 
 
 # Changelog:
+Version 0.1.2:
+* Added support for WHERE clauses
+  - Currently at most 1 field can be filtered on
+* Generalized SQL responses
+
 Version 0.1.1:
 * Added SELECT queries
 * Added an ERROR class
@@ -27,6 +32,8 @@ Version 0.1.1:
 
 # TODO:
 * Rewrite database logic in C/C++
+* Rewrite WHERE logic, to use a better format
+* Refactor the SQLResponse to make better use of WHERE
 
 ## Python TODO:
 ### Tier 1:
@@ -43,7 +50,6 @@ Version 0.1.1:
 
 ### Tier 2.5:
   * Data constraints
-  * WHERE clauses
   * MAX/MIN values
   * Sorting: ORDER/GROUP BY
 

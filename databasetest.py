@@ -28,6 +28,20 @@ print db.Query('INSERT INTO test2 ("test", "val", "id") VALUES ("CAA", "DDD", "2
 print db.Query('INSERT INTO test2 ("test", "val", "id") VALUES ("DAA", "CCC", "3");')
 print
 
-print "Querying on multiple items"
-print db.Query("SELECT (id, val) FROM test2;")
+print "Invalid key"
 print db.Query("SELECT (id, value) FROM test2;")
+print
+
+print "Querying on multiple items"
+for i in db.Query("SELECT (id, val) FROM test2;"):
+    print "  " + str(i)
+print
+
+print "Query with WHERE clause"
+for i in db.Query("SELECT (id, val) FROM test2 WHERE (test) = 'AAA';"):
+    print "  " + str(i)
+print
+
+print "Invalid SELECTion query"
+print db.Query("FROM B SELECT (id, val) FROM test2 WHERE (test) = 'AAA';")
+print
