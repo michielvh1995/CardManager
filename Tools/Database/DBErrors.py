@@ -1,21 +1,20 @@
-class ERROR:
-    def __init__(self):
-        self.e = "ERROR"
-        self.internal = ["ERROR"]
+from SQLResponse import Response
+
+class ERROR(Response):
+    def __init__(self, text = "No extra information given"):
+        self.internal = {
+            "type"     : "ERROR",
+            "errorText": text
+        }
 
     def __str__(self):
-        return self.e
-
-    def __getitem__(self, key):
-        return self.internal[key]
+        return "Error: " + self.internal["errorText"]
 
 class KEYNOTFOUNDERROR(ERROR):
     def __init__(self, key, table = None):
-        self.e = "KEY ERROR: key " + str(key) + " not found in table" + ((" in table " + table) if table else "!")
-        self.internal = ["ERROR", table, key]
+        ERROR.__init__(self, text = "KEY ERROR: key " + str(key) + " not found in table" + ((" in table " + table) if table else "!"))
 
 
 class COMMANDNOTFOUNDERROR(ERROR):
     def __init__(self, SQL):
-        self.internal = ["ERROR"]
-        self.e = "SQL ERROR: Unknown SQL command \" " + str(SQL) + "\" "
+        ERROR.__init__(self, text = "SQL ERROR: Unknown SQL command \" " + str(SQL) + "\" ")

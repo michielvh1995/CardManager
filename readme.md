@@ -18,6 +18,15 @@ Encrypted skiplist & hashtable
 
 
 # Changelog:
+Version 0.1.4:
+* Changed how SQLresponses work
+* Changed how DBErrors work
+* Most of the code now uses the new format
+* Fixed bugs that the database was not properly imported
+
+Version 0.1.3:
+* Updated how WHERE works. Still only supports filtering on 1 field
+
 Version 0.1.2:
 * Added support for WHERE clauses
   - Currently at most 1 field can be filtered on
@@ -32,7 +41,6 @@ Version 0.1.1:
 
 # TODO:
 * Rewrite database logic in C/C++
-* Rewrite WHERE logic, to use a better format
 * Refactor the SQLResponse to make better use of WHERE
 
 ## Python TODO:

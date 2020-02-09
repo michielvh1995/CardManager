@@ -1,4 +1,4 @@
-from Tools.Database import DataBase
+from Tools.Database.Database import DataBase
 # ===================================================
 # Debugging
 # ===================================================
@@ -38,10 +38,10 @@ for i in db.Query("SELECT (id, val) FROM test2;"):
 print
 
 print "Query with WHERE clause"
-for i in db.Query("SELECT (id, val) FROM test2 WHERE (test) = 'AAA';"):
+for i in db.Query("SELECT (id, val) FROM test2 WHERE 'test' = AAA;"):
     print "  " + str(i)
 print
 
-print "Invalid SELECTion query"
+print "Invalid SELECT query"
 print db.Query("FROM B SELECT (id, val) FROM test2 WHERE (test) = 'AAA';")
 print

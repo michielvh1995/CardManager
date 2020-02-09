@@ -1,42 +1,16 @@
 import re
 import DBErrors as err
+import SQLResponse as rs
 
 insert_str = "^INSERT INTO (.*) \((.*)\) VALUES \((.*)\);"
 select_str = "^SELECT \((.*)\) FROM (.*)[ ;]"
 
-where_str = " ?(WHERE|AND|OR) \'(.*)\' = (.*)[ ;]"
+where_str = " ?(WHERE|AND|OR) [\'\(](.*)[\'\)] = (.*)[ ;]"
 
 #test = " (.*) = (.*)?( WHERE| AND| OR) (.*) = (.*)[ ;]"
 test = "SELECT\s+(.*)\s+FROM\s+(.*)"
 test = "WHERE\s+(.*)=(.*)\s+?(AND|OR)\s+(.*)"
 
-
-# Database response:
-# [str, table. fields, (other)]
-class SQLResponse:
-    def __init__(self, type, table = None, fields = None, rest = None, where = False ):
-        self.internal = [type, table, fields]
-        if rest:
-            for i in rest:
-                self.internal.append(i)
-
-        self.tbl = table
-        self.rest = rest
-        self.fields = fields
-
-        # Flags for queries:
-        self.WHERE = where
-
-    def __getitem__(self, key):
-        return self.internal[key]
-
-    def __len__(self):
-        return len(self.internal)
-
-    def __str__(self):
-        return str(self.internal)
-
-SQLNone = SQLResponse("NONE")
 
 class SQLInterpreter:
     def __init__(self):
@@ -56,13 +30,16 @@ class SQLInterpreter:
         # The insert query path:
         out = self.try_insert(SQL)
         if(out[0] == "INSERT"):
-            out[2] = self.re_clean.sub("", out[2]).split(",")
-            out[3] = self.re_clean.sub("",out[3]).split(",")
-            # ["command", table, fields, values, return]
-            return out
+
+            outp = rs.SQLResponse("INSERT",
+                table  = out[1],
+                fields = self.re_clean.sub("", out[2]).split(",")
+                )
+            outp["values"] = self.re_clean.sub("",out[3]).split(",")
+            return outp
 
         out = self.try_select(SQL)
-        if (out[0] == "SELECT"):
+        if (out["type"] == "SELECT"):
             return out
 
         return err.COMMANDNOTFOUNDERROR(SQL)
@@ -75,7 +52,7 @@ class SQLInterpreter:
     def try_select(self, sql):
         """ Try to see whether or not the query is a selection query and break it up in parts
         """
-        ret = SQLNone
+        ret = rs.SQLNone
 
         # Check whether or not it is a selection operation
         res = self.re_select.search(sql)
@@ -86,14 +63,9 @@ class SQLInterpreter:
 
         # Check for a WHERE
         print
-        print
-        print
-
+        print "wh.groups():"
         wh = self.re_where.search(sql)
-        print wh.groups()
-        rest = [wh is not None]
-        print
-        print
+        where = None
 
         # If a WHERE clause exists
         if wh:
@@ -104,15 +76,15 @@ class SQLInterpreter:
             res = self.re_select.search(sql)
 
             # And set the rest list
-            self.cleanWhere(rest, wh)
-
+            where = self.cleanWhere(wh)
 
         # Now extract the table and fields from the query
-        ret = SQLResponse("SELECT",
+        ret = rs.SQLResponse("SELECT",
             table = self.re_clean.sub("", res.group(2)),
-            fields = self.re_clean.sub("", res.group(1)).split(","),
-            rest = rest,
-            where = rest[0])
+            fields = self.re_clean.sub("", res.group(1)).split(",")
+            )
+
+        ret["where"] = where
 
         return ret
 
@@ -132,13 +104,15 @@ class SQLInterpreter:
 
         return out
 
-    def cleanWhere(self, tar, resrch):
+    def cleanWhere(self, resrch):
         """ TODO: This function cleans the WHERE statement to a useful list of (key, value) pairs
 
         """
+        tar = []
         t1 = resrch.group(2)
         t2 = resrch.group(3)
         tar.append(
             (self.re_clean.sub("",t1),self.re_clean.sub("",t2))
         )
-        print tar
+
+        return tar
