@@ -1,10 +1,9 @@
 import DBErrors as err
 import DBResponse as res
 
-typeTable = {
-        type("str") : "TEXT",
-        type(1)     : "INT"
-}
+# TODO: REMOVE THIS IMPORT. The types are 100% certainly a SQL only thing!!!
+from Types import typeTable
+
 
 
 class Table:

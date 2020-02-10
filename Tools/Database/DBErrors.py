@@ -21,3 +21,7 @@ class COMMANDNOTFOUNDERROR(ERROR):
 class TYPEERROR(ERROR):
     def __init__(self, field, fieldtype, errtype):
         ERROR.__init__(self, text = "Field " + str(field) + " is of type " + str(fieldtype)  + ", not of type " + str(errtype))
+
+class TYPENOTFOUNDERROR(ERROR):
+    def __init__(self, errtype):
+        ERROR.__init__(self, text = "Type " + str(errtype) + " not recognized!")

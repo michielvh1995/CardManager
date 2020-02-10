@@ -18,6 +18,9 @@ Encrypted skiplist & hashtable?
 
 
 # Changelog:
+Version 0.1.6b:
+* Now Supports CREATE TABLE queries
+
 Version 0.1.6a:
 * Databases can now be exported as SQL files
 

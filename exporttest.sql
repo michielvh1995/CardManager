@@ -2,7 +2,11 @@
 CREATE DATABASE None;
 
 --Create tables:
-CREATE TABLE typeTest(
+CREATE TABLE typeTest (
+     text TEXT,
+     id TEXT
+);
+CREATE TABLE typeTest2 (
      text TEXT,
      id TEXT
 );

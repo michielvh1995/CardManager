@@ -19,8 +19,9 @@ class DataBase:
         self.tables[name] = tbl
         self.tablenames.append(name)
         return "Created table: \"" + str(name)+"\""
-    #
 
+
+    #
     def Query(self, query):
         """ Execute a query """
         # Interpret SQL
@@ -48,14 +49,14 @@ class DataBase:
 
         return ret
 
+
+
     # TODO: Refactor this function and fix its return value
     def insert(self, tbl, fields, values, ret):
         """ Insert a row into a table
         """
         if tbl in self.tablenames:
             res = self.tables[tbl].Insert(fields, values)
-
-        # Query return values and return them
         return res
 
     # TODO: Fix its return if no results are found
@@ -91,6 +92,45 @@ class TypedDataBase(DataBase):
         DataBase.__init__(self, passwd)
         self.name = name
 
+    def Query(self, query):
+        """ Execute a query
+        input:
+            query   :   string  :   A SQL query to be executed
+        returns:
+            DBResponse  :   The effect of the query
+        """
+        # Interpret SQL
+        # Currently hardcoded to just accept insertion queries
+        ret = DBResponse.DBResponse("None")
+        res = self.sqlinterpreter.TryDecodeSQL(query)
+
+        if res["type"] == "ERROR":
+            return res
+
+        elif res["type"] == "INSERT":
+            ret = self.insert(
+                tbl   = res["table"],
+                fields= res["fields"],
+                values= res["values"],
+                ret   = res["return"]
+            )
+
+        elif res["type"] == "SELECT":
+            ret = self.select(
+                table  = res["table"],
+                fields = res["fields"],
+                where  = res["where"]
+            )
+
+        elif res["type"] == "CREATE TABLE":
+            ret = self.create_table(
+                    name = res["table"],
+                    fields = res["fields"]
+                )
+
+        return ret
+
+
     def create_table(self, name, fields, constraints = None):
         """ Adds a TypedTable to the list of tables
         input:
@@ -98,18 +138,22 @@ class TypedDataBase(DataBase):
             fields      : {string, string}  : dictionary of field names and their types
             constraints : [TBD]             : A set of constraints for the values in the table (i.e. primary keys)
         returns:
-            string: confirmation or error message
+            DBResponse  : confirmation or error message
         """
         self.tablenames.append(name)
 
         table = TypedTable(name, fields, constraints)
         self.tables[name] = table
 
-        return "Created table: \"" + str(name)+"\""
+        return DBResponse.DBResponse(type="SUCCESS", operation = "CREATE TABLE", table = name, database = self.name)
 
 
     def ExportAsSQL(self, filestream):
         """ Exports the database as a list of SQL statements to an active filestream
+        input:
+            filestream  : file    : A python filestream to write to
+        returns:
+            None
         """
         # Create DB:
         filestream.write("--Create database:\r\n")
@@ -118,7 +162,7 @@ class TypedDataBase(DataBase):
         # Create Tables:
         filestream.write("\r\n--Create tables:\r\n")
         for name in self.tablenames:
-            filestream.write("CREATE TABLE " + str(name) + "(\r\n")
+            filestream.write("CREATE TABLE " + str(name) + " (\r\n")
 
             # Creating all fields of the tables
             for i, field in enumerate(self.tables[name].fields.keys()):
@@ -137,3 +181,9 @@ class TypedDataBase(DataBase):
                 values = ", ".join(map(str,[row[key] for key in fields ]))
                 line = "INSERT INTO " +table+" ("+ ', '.join(map(str, fields)) +")"+"  VALUES ("+values+");"
                 filestream.write(line + "\r\n")
+
+    def ImportSQL(self, filestream):
+        """ Import a database from a SQL file
+        """
+
+        # Step 1: read the file until the first CREATE DATABASE

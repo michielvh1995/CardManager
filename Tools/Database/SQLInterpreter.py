@@ -2,6 +2,8 @@ import re
 import DBErrors as err
 import DBResponse as rs
 
+from Types import typeTable, types
+
 insert_str = "^INSERT INTO (.*) \((.*)\) VALUES \((.*)\);"
 select_str = "^SELECT \((.*)\) FROM (.*)[ ;]"
 
@@ -11,9 +13,13 @@ where_str = " ?(WHERE|AND|OR) [\'\(](.*)[\'\)] = (.*)[ ;]"
 test = "SELECT\s+(.*)\s+FROM\s+(.*)"
 test = "WHERE\s+(.*)=(.*)\s+?(AND|OR)\s+(.*)"
 
+createTable = "^CREATE TABLE (.*)\s+\((.*)\);"
+
 
 class SQLInterpreter:
     def __init__(self):
+        self.re_table = re.compile(createTable)
+
         self.re_insert = re.compile(insert_str)
         self.re_select = re.compile(select_str)
 
@@ -22,11 +28,29 @@ class SQLInterpreter:
         # Cleaning the (sub)strings
         self.re_clean = re.compile(r"[\s+\"\']")
 
+
     # TODO: REFACTOR THIS FUNCTION AND ALL ITS CHILDREN
     def TryDecodeSQL(self, SQL):
         """ Try all possible types of queries and return the correct type
 
         """
+
+        # CREATE DATABASE:
+
+
+        # CREATE TABLE:
+        out = self.try_CreateTable(SQL)
+        if out["type"] == "CREATE TABLE" or out["type"] == "ERROR":
+            return out
+
+        # INSERT
+
+        # SELECT
+
+
+
+
+
 
         # The insert query path:
         out = self.try_insert(SQL)
@@ -49,6 +73,36 @@ class SQLInterpreter:
         # The update query path:
         # The remove query path:
         # The select query path:
+
+    def try_CreateTable(self, sql):
+        """ Try to determine whether or not the statement is a CREATE TABLE statement
+        """
+        ret = rs.SQLNone
+        regex_result = self.re_table.search(sql)
+
+        if regex_result:
+            # TODO: Improve upon this splitting
+            # TODO: Create the constraints array/dictionary
+            fields = regex_result.group(2).split(",")   # Break fields up in field constraint tuples
+            fields = [f.split() for f in fields]
+
+            fdict = {}
+            for f in fields:
+                fdict[f[0]] = f[1]
+
+            # Do type testing for the fields
+            for f in fdict.keys():
+                if not fdict[f] in types:
+                    return err.TYPENOTFOUNDERROR(fdict[f])
+
+            ret = rs.SQLResponse(
+                type = "CREATE TABLE",
+                table = regex_result.group(1),  # Table name is the first group in the match
+                fields = fdict                  # The dictionary of field TYPE pairs
+            )
+
+        return ret
+
 
     def try_select(self, sql):
         """ Try to see whether or not the query is a selection query and break it up in parts
