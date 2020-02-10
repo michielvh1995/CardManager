@@ -56,6 +56,7 @@ class Table:
                 out.append(r)
         return out
 
+
 class TypedTable(Table):
     def __init__(self, name, fields, contraints = None):
         self.fields = fields    # { name : type }

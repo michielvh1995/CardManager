@@ -60,6 +60,10 @@ print "Creating a TABLE with field types"
 print dbT.create_table("typeTest", {"id" : "TEXT", "text": "TEXT"})
 print
 
+# Creating a table properly:
+#"CREATE TABLE name (field type, field type, ...);"
+
+
 print "Correct typing:"
 print dbT.Query('INSERT INTO typeTest ("id", "text") VALUES (1, "testtext");')
 print dbT.Query('INSERT INTO typeTest ("id", "text") VALUES (2, "Met spatie?");')
@@ -73,3 +77,7 @@ print
 print "Querying on typed database, note how spaces do not work yet:"
 print dbT.Query("SELECT (id, text) FROM typeTest;")
 print
+
+print "Export test"
+with open("exporttest.sql", "w") as file:
+    dbT.ExportAsSQL(file)

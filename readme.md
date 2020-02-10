@@ -18,6 +18,9 @@ Encrypted skiplist & hashtable?
 
 
 # Changelog:
+Version 0.1.6a:
+* Databases can now be exported as SQL files
+
 Version 0.1.5:
 * Moved Table to seprate file
 * Implemented TypedTable: a Table that supports type constraints
@@ -50,6 +53,20 @@ Version 0.1.1:
 * Rewrite database logic in C/C++
 * Refactor the SQLResponse to make better use of WHERE
 
+## Python TODO (NEW!):
+### Tier 1:
+  * Refactor SQLInterpreter to handle types better
+  * Convert string to types (see previous point)
+  * Allow WHERE to query on inequals (>, <, etc.)
+  * Loading and storing of a database
+  * Have strings keep their spaces and allow for escaped characters (\' => ')
+  * Filestoring:
+    - Import database from SQL file
+
+### Tier 2:
+  * Store the database as a file on the PC that allows for data "streaming"
+
+
 ## Python TODO:
 ### Tier 1:
   * Allow for return values for queries
@@ -61,7 +78,6 @@ Version 0.1.1:
   * Data types!
   * Append database files without having to load the entire DB (might/will be broken with encryption)
   * Make it into a deamon
-  * Refactoring the SQL interpretation out of the main class
 
 ### Tier 2.5:
   * Data constraints
