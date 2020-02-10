@@ -12,12 +12,19 @@ The UI will be provided by the tkinter package
 ## How the DB works:
 idk yet
 
-Encrypted skiplist & hashtable
+Encrypted skiplist & hashtable?
 
 ![Class graph]()
 
 
 # Changelog:
+Version 0.1.5:
+* Moved Table to seprate file
+* Implemented TypedTable: a Table that supports type constraints
+* Implemented TypedDataBase: the database now supports type constraints
+* TODO: actually convert SQL (string) to types (i.e. date/int)
+* TODO: rewrite the SQLInterpreter
+
 Version 0.1.4:
 * Changed how SQLresponses work
 * Changed how DBErrors work

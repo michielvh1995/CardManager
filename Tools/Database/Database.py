@@ -1,57 +1,10 @@
-import DBErrors as err
+import DBErrors as err          # UNUSED
+import DBResponse               # UNUSED
 import SQLInterpreter
+from Table import Table, TypedTable
 
 
 # ------------------------------------------------------------
-
-class Table:
-    def __init__(self, fieldnames, where=None):
-        self.fields = fieldnames    #
-        self.header = []        # The field names
-        self.rows = []          # [{name: field}]
-
-        for f in self.fields:
-            self.header.append(f)
-
-    def Insert(self, names, values, ret = None):
-        """ Insert a new row to the table
-        """
-        row = {}
-        for i, f in enumerate(names):
-            row[f] = values[i]
-
-        self.rows.append(row)
-
-        if ret:
-            return "asd"
-
-    def Select(self, fields, where = None):
-        """ Check if all names are in the fields and return the values of the rows per field
-        """
-        out = []
-        for row in self.rows:
-            r = []
-            use = True
-            if where:
-                for pair in where:
-                    if row.has_key(pair[0]):
-                        if not row[pair[0]] == pair[1]:
-                            use = False
-                    else:
-                        return err.KEYNOTFOUNDERROR(pair[0])
-
-            # Match the WHERE
-
-            # Select fields per row
-            if use:
-                for n in fields:
-                    if row.has_key(n):
-                        r.append(row[n])
-                    else:
-                        return err.KEYNOTFOUNDERROR(n)
-                out.append(r)
-        return out
-
 class DataBase:
     def __init__(self, passwd = None):
         # Necessary?
@@ -72,7 +25,7 @@ class DataBase:
         """ Execute a query """
         # Interpret SQL
         # Currently hardcoded to just accept insertion queries
-        ret = ""
+        ret = DBResponse.DBResponse("None")
         res = self.sqlinterpreter.TryDecodeSQL(query)
 
         if res["type"] == "ERROR":
@@ -95,38 +48,28 @@ class DataBase:
 
         return ret
 
+    # TODO: Refactor this function and fix its return value
     def insert(self, tbl, fields, values, ret):
         """ Insert a row into a table
         """
         if tbl in self.tablenames:
-            self.tables[tbl].Insert(fields, values)
+            res = self.tables[tbl].Insert(fields, values)
 
-            # Query return values and return them
+        # Query return values and return them
+        return res
 
-            return "TRUE"
-        else:
-            return "ERROR"
-
+    # TODO: Fix its return if no results are found
     def select(self, table, fields, where):
-        """
+        """ Gather data of the specified fields in the specified table
+        input:
+            table   :   str     :   The name of the table from which data is requested
+            fields  :  [str]    :   List of fieldnames of which data is requested
+            where   :[str,value]:   List of fieldnames and values on which the data is filtered
+        returns     :  [Row]    :   List of list with the requested data
+
         """
         if table in self.tablenames:
             return self.tables[table].Select(fields = fields, where = where)
-        return "SELECT FALSE"
-
-    def selectRes(self, sqlresponse):
-        """ Return all values of certain fields from a table.
-        WHERE clauses can be used to filter the fields on.
-        input:
-            sqlresponse : SQLResponse : the objectified SQL query
-        """
-        if sqlresponse[1] in self.tablenames:
-            wh = None
-            if sqlresponse[3]:
-                wh = sqlresponse[4]
-
-            return self.tables[sqlresponse[1]].Select(fields = sqlresponse[2], where=[wh])
-
         return "SELECT FALSE"
     #
     # def create_table(self, name, fields, where = None, ret = None):
@@ -139,26 +82,26 @@ class DataBase:
     #
     #     return ret
 
-db = DataBase()
-print db.create_table("test3", ["id", "test", "val"])
-print db.Query('INSERT INTO test3 ("test", "val", "id") VALUES ("AAA", "BBB", "0");')
-print db.Query('INSERT INTO test3 ("test", "val", "id") VALUES ("AAB", "BBB", "1");')
+class TypedDataBase(DataBase):
+    # TODO: when creating tables is done using SQL we need to do the following:
+    # When creating tables the return value of create table (from the Table class) becomes a DBresponse
+    # Thus error checking needs to be done in the DataBase class as well
+    # For now we assume that creating tables is always done correctly
+    def __init__(self, passwd = None):
+        DataBase.__init__(self, passwd)
 
-print "Querying"
-#print db.Query("SELECT (id, val) FROM test2;")
-print db.Query("SELECT (id, val) FROM test2 WHERE 'test' = AAA;")
-print db.Query("SELECT (id, val) FROM test2 WHERE (test) = 'AAA';")
+    def create_table(self, name, fields, constraints = None):
+        """ Adds a TypedTable to the list of tables
+        input:
+            name        : string            : name of the table
+            fields      : {string, string}  : dictionary of field names and their types
+            constraints : [TBD]             : A set of constraints for the values in the table (i.e. primary keys)
+        returns:
+            string: confirmation or error message
+        """
+        self.tablenames.append(name)
 
-print "Creating a larger table"
-print db.create_table("test2", ["id", "test", "val"])
-print db.Query('INSERT INTO test2 ("test", "val", "id") VALUES ("AAA", "BBB", "0");')
-print db.Query('INSERT INTO test2 ("test", "val", "id") VALUES ("BAA", "CCC", "1");')
-print db.Query('INSERT INTO test2 ("test", "val", "id") VALUES ("CAA", "DDD", "2");')
-print db.Query('INSERT INTO test2 ("test", "val", "id") VALUES ("DAA", "CCC", "3");')
-print db.Query('INSERT INTO test2 ("test", "val", "id") VALUES ("AAA", "CCC", "4");')
-print
+        table = TypedTable(name, fields, constraints)
+        self.tables[name] = table
 
-print "Query with WHERE clause"
-for i in db.Query("SELECT (id, val) FROM test2 WHERE 'test' = AAA;"):
-    print "  " + str(i)
-print
+        return "Created table: \"" + str(name)+"\""

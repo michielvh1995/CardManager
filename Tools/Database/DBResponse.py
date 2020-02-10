@@ -17,6 +17,16 @@ class Response:
     def __str__(self):
         return str(self.internal)
 
+class DBResponse(Response):
+    def __init__(self, type, database = None, table = None, operation = None):
+        self.internal = {
+            "type"      : type,
+            "database"  : database,
+            "table"     : table,
+            "operation" : operation
+        }
+
+
 class SQLResponse(Response):
     def __init__(self, type, table = None, fields = None, returnquery = None ):
 
@@ -26,6 +36,7 @@ class SQLResponse(Response):
             "fields" : fields,
             "return" : returnquery
         }
+
 
 
 

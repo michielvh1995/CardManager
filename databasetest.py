@@ -1,4 +1,4 @@
-from Tools.Database.Database import DataBase
+from Tools.Database.Database import DataBase, TypedDataBase
 # ===================================================
 # Debugging
 # ===================================================
@@ -38,10 +38,38 @@ for i in db.Query("SELECT (id, val) FROM test2;"):
 print
 
 print "Query with WHERE clause"
-for i in db.Query("SELECT (id, val) FROM test2 WHERE 'test' = AAA;"):
+for i in db.Query("SELECT (test, id, val) FROM test2 WHERE 'test' = AAA;"):
     print "  " + str(i)
 print
 
+print "Query with WHERE and AND"
+print db.Query("SELECT (id, val) FROM test2 WHERE 'test' = AAA AND 'val' = BBB")
+print
+
+
 print "Invalid SELECT query"
 print db.Query("FROM B SELECT (id, val) FROM test2 WHERE (test) = 'AAA';")
+print
+
+# ---------------------------------------------------------------------------
+# Round 2: TypedDatabase
+# ---------------------------------------------------------------------------
+dbT = TypedDataBase()
+
+print "Creating a TABLE with field types"
+print dbT.create_table("typeTest", {"id" : "TEXT", "text": "TEXT"})
+print
+
+print "Correct typing:"
+print dbT.Query('INSERT INTO typeTest ("id", "text") VALUES (1, "testtext");')
+print dbT.Query('INSERT INTO typeTest ("id", "text") VALUES (2, "Met spatie?");')
+print dbT.Query('INSERT INTO typeTest ("id", "text") VALUES (3, "Andere text");')
+print
+
+print "Incorrectly typed"
+print dbT.Query('INSERT INTO typeTest ("id", "text") VALUES ("a", "testtext");')
+print
+
+print "Querying on typed database, note how spaces do not work yet:"
+print dbT.Query("SELECT (id, text) FROM typeTest;")
 print

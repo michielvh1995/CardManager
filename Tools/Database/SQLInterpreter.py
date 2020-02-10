@@ -1,6 +1,6 @@
 import re
 import DBErrors as err
-import SQLResponse as rs
+import DBResponse as rs
 
 insert_str = "^INSERT INTO (.*) \((.*)\) VALUES \((.*)\);"
 select_str = "^SELECT \((.*)\) FROM (.*)[ ;]"
@@ -22,6 +22,7 @@ class SQLInterpreter:
         # Cleaning the (sub)strings
         self.re_clean = re.compile(r"[\s+\"\']")
 
+    # TODO: REFACTOR THIS FUNCTION AND ALL ITS CHILDREN
     def TryDecodeSQL(self, SQL):
         """ Try all possible types of queries and return the correct type
 
@@ -62,8 +63,6 @@ class SQLInterpreter:
             return ret
 
         # Check for a WHERE
-        print
-        print "wh.groups():"
         wh = self.re_where.search(sql)
         where = None
 
@@ -100,7 +99,6 @@ class SQLInterpreter:
             out[0] = "INSERT"
             for i in range(1,4):
                 out[i] = self.re_insert.search(sql).group(i)
-
 
         return out
 
