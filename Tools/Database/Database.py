@@ -1,5 +1,5 @@
-import DBErrors as err          # UNUSED
-import DBResponse               # UNUSED
+import DBErrors as err          # TODO: UNUSED remove
+import DBResponse
 import SQLInterpreter
 from Table import Table, TypedTable
 
@@ -109,10 +109,8 @@ class TypedDataBase(DataBase):
 
         elif res["type"] == "INSERT":
             ret = self.insert(
-                tbl   = res["table"],
-                fields= res["fields"],
-                values= res["values"],
-                ret   = res["return"]
+                tbl     = res["table"],
+                kvpairs = res["fields"]    # Fields::[(field, value)]
             )
 
         elif res["type"] == "SELECT":
@@ -130,22 +128,39 @@ class TypedDataBase(DataBase):
 
         return ret
 
+    def insert(self, tbl, kvpairs):
+        """ Insert a row into a table
+        input:
+            tbl     : string              : The name of the target table
+            kvpairs : [(string, string)]  : A list of key-value pairs of values to insert into fields
 
-    def create_table(self, name, fields, constraints = None):
+        """
+        res = err.TABLENOTFOUNDERROR(tbl)
+
+        if tbl in self.tablenames:
+            res = self.tables[tbl].Insert(kvpairs)
+
+        return res
+
+    def create_table(self, name, fields):
         """ Adds a TypedTable to the list of tables
         input:
             name        : string            : name of the table
-            fields      : {string, string}  : dictionary of field names and their types
+            fields      : {string, string}  : dictionary of field names and their constraints (type is one)
             constraints : [TBD]             : A set of constraints for the values in the table (i.e. primary keys)
         returns:
             DBResponse  : confirmation or error message
         """
-        self.tablenames.append(name)
 
-        table = TypedTable(name, fields, constraints)
-        self.tables[name] = table
+        # Create an empty table:
+        table = TypedTable()
+        res = table.TryCreateTable(name, fields)
 
-        return DBResponse.DBResponse(type="SUCCESS", operation = "CREATE TABLE", table = name, database = self.name)
+        if res["type"] == "SUCCESS":
+            self.tables[name] = table
+            self.tablenames.append(name)
+
+        return res
 
 
     def ExportAsSQL(self, filestream):
@@ -173,11 +188,10 @@ class TypedDataBase(DataBase):
 
         # The data of each table:
         filestream.write("\r\n--Fill in the data of each table:\r\n")
-        for table in self.tablenames:
-            fields = self.tables[table].fields.keys()
+        for table in self.tablenames:               # Export per table:
+            for row in self.tables[table].rows:     # Export each row
+                fields = row.keys()                 # Not each row has a value for all the keys
 
-            for row in self.tables[table].rows:
-                # Export each row
                 values = ", ".join(map(str,[row[key] for key in fields ]))
                 line = "INSERT INTO " +table+" ("+ ', '.join(map(str, fields)) +")"+"  VALUES ("+values+");"
                 filestream.write(line + "\r\n")

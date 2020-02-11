@@ -2,7 +2,7 @@ import DBErrors as err
 import DBResponse as res
 
 # TODO: REMOVE THIS IMPORT. The types are 100% certainly a SQL only thing!!!
-from Types import typeTable
+from Types import typeTable, TypeCaster
 
 
 
@@ -57,33 +57,49 @@ class Table:
 
 
 class TypedTable(Table):
-    def __init__(self, name, fields, contraints = None):
-        self.fields = fields    # { name : type }
-        self.rows   = []        # [{fieldname : value}]
-        self.name = name
+    def __init__(self):
+        self.name = "None"
 
-        # TODO: Check whether each of the types given are correct
+    def TryCreateTable(self, name, fields):
+        """
+        """
+        # Check if all types exist, if one doesn't raise an error
+        for field in fields.keys():
+            if not fields[field] in typeTable:
+                return err.TYPENOTFOUNDERROR(fields[field])
 
-    # TODO: return a proper response
-    def Insert(self, names, values):
+        self.name   = name
+        self.fields = fields
+        self.rows   = []
+        self.caster = TypeCaster()
+
+        return res.DBResponse(
+            type      = "SUCCESS",
+            operation = "CREATE TABLE",
+            table     = name
+        )
+
+    def Insert(self, kvpairs):
         """ Check whether if the items in the row are of the correct type and insert them
         """
 
-        # Check whether the table has the key
-        for key in names:
-            if not self.fields.has_key(key):
+        row = {}
+        # Check whether the table has the key and ifso insert into row
+        for key, value in kvpairs:
+            if not self.fields.has_key(key):    # Check if key exists
                 return err.KEYNOTFOUNDERROR(key, self.name)
 
-        # Add the items and see whether they are the correct type
-        row = {}
-        for i, f in enumerate(names):
-            # Check type in the typetable
-            if typeTable[type(values[i])] == self.fields[f]:
-                row[f] = values[i]  # Add the values
-            else:                   # Throw a type error
-                return err.TYPEERROR(f, self.fields[f], type(values[i]))
+            # Check typing and add to row
+            if not self.fields[key] == "TEXT":
+                type, cast = self.caster.TypeCast(value)
+                if type == self.fields[key]:
+                    row[key] = cast
+                else:
+                    return err.TYPEERROR(key, self.fields[key], type)
+            else: # Ignore typing if field type is text
+                row[key] = value
 
         self.rows.append(row)
-        return res.DBResponse("SUCCESS", operation = "INSERT")
+        return res.DBResponse("SUCCESS", operation = "INSERT", table = self.name)
 
         # Raise acc?

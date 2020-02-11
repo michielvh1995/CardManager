@@ -2,8 +2,6 @@ import re
 import DBErrors as err
 import DBResponse as rs
 
-from Types import typeTable, types
-
 insert_str = "^INSERT INTO (.*) \((.*)\) VALUES \((.*)\);"
 select_str = "^SELECT \((.*)\) FROM (.*)[ ;]"
 
@@ -14,6 +12,12 @@ test = "SELECT\s+(.*)\s+FROM\s+(.*)"
 test = "WHERE\s+(.*)=(.*)\s+?(AND|OR)\s+(.*)"
 
 createTable = "^CREATE TABLE (.*)\s+\((.*)\);"
+
+
+# Cleaning regex:
+clean_name = "[\"\\\'\(\s+]"
+clean_field = "\""
+
 
 
 class SQLInterpreter:
@@ -28,22 +32,28 @@ class SQLInterpreter:
         # Cleaning the (sub)strings
         self.re_clean = re.compile(r"[\s+\"\']")
 
+        self.clean_name  = re.compile(clean_name)
+        self.clean_field = re.compile(clean_field)
 
     # TODO: REFACTOR THIS FUNCTION AND ALL ITS CHILDREN
-    def TryDecodeSQL(self, SQL):
+    def TryDecodeSQL(self, sql):
         """ Try all possible types of queries and return the correct type
 
         """
-
+        SQL = sql
         # CREATE DATABASE:
 
 
         # CREATE TABLE:
-        out = self.try_CreateTable(SQL)
+        out = self.try_CreateTable(sql)
         if out["type"] == "CREATE TABLE" or out["type"] == "ERROR":
             return out
 
         # INSERT
+        out = self.try_insert(SQL)
+        if out["type"] == "INSERT" or out["type"] == "ERROR":
+            return out
+
 
         # SELECT
 
@@ -53,15 +63,6 @@ class SQLInterpreter:
 
 
         # The insert query path:
-        out = self.try_insert(SQL)
-        if(out[0] == "INSERT"):
-
-            outp = rs.SQLResponse("INSERT",
-                table  = out[1],
-                fields = self.re_clean.sub("", out[2]).split(",")
-                )
-            outp["values"] = self.re_clean.sub("",out[3]).split(",")
-            return outp
 
         out = self.try_select(SQL)
         if (out["type"] == "SELECT"):
@@ -89,11 +90,6 @@ class SQLInterpreter:
             fdict = {}
             for f in fields:
                 fdict[f[0]] = f[1]
-
-            # Do type testing for the fields
-            for f in fdict.keys():
-                if not fdict[f] in types:
-                    return err.TYPENOTFOUNDERROR(fdict[f])
 
             ret = rs.SQLResponse(
                 type = "CREATE TABLE",
@@ -148,11 +144,22 @@ class SQLInterpreter:
             sql:    string              the SQL query
         """
 
-        out = ["NONE",None,None,None,None]
-        if self.re_insert.search(sql):
-            out[0] = "INSERT"
-            for i in range(1,4):
-                out[i] = self.re_insert.search(sql).group(i)
+        out = rs.SQLNone
+        res = self.re_insert.search(sql)    # table, [field], [value]
+        if res:
+            # Split the fields & values into keyvalue pairs
+            fields = [self.clean_name .sub("", f) for f in res.group(2).split(",")]
+            values = [self.clean_field.sub("", f) for f in res.group(3).split(",")]
+
+            # Combine cleaned fields into pairs
+            kvpairs = zip(fields,values)
+
+            # Put everything into a SQLResponse
+            out = rs.SQLResponse(
+                type   = "INSERT",       # INSERT
+                table  = res.group(1),   # Table
+                fields = kvpairs         # [(Field,Value)]
+            )
 
         return out
 

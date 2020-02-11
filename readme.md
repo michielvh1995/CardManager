@@ -18,6 +18,13 @@ Encrypted skiplist & hashtable?
 
 
 # Changelog:
+Version 0.1.6.c:
+* Now has full support for 3 data types: INT/FLOAT/TEXT
+* Further refactoring
+  - Less dependencies for SQLInterpreter
+  - SQLInterpreter now has a proper structure and responses
+* WHERE clauses are broken
+
 Version 0.1.6b:
 * Now Supports CREATE TABLE queries
 

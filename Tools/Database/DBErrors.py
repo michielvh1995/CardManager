@@ -25,3 +25,7 @@ class TYPEERROR(ERROR):
 class TYPENOTFOUNDERROR(ERROR):
     def __init__(self, errtype):
         ERROR.__init__(self, text = "Type " + str(errtype) + " not recognized!")
+
+class TABLENOTFOUNDERROR(ERROR):
+    def __init__(self, table):
+        ERROR.__init__(self, text = "Table " + str(table) + " does not exist!")
