@@ -81,9 +81,6 @@ Version 0.1.1:
 
 ## Python TODO (NEW!):
 ### Tier 1:
-  * Refactor SQLInterpreter to handle types better
-  * Convert string to types (see previous point)
-  * Allow WHERE to query on inequals (>, <, etc.)
   * Loading and storing of a database
   * Have strings keep their spaces and allow for escaped characters (\' => ')
   * Filestoring:
@@ -95,13 +92,10 @@ Version 0.1.1:
 
 ## Python TODO:
 ### Tier 1:
-  * Allow for return values for queries
   * Save databases/tables on the harddrive
   * Load databases from a file
-  * Look into list-reordering prevention (or if this is even a thing)
 
 ### Tier 2:
-  * Data types!
   * Append database files without having to load the entire DB (might/will be broken with encryption)
   * Make it into a deamon
 

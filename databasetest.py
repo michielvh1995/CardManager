@@ -53,8 +53,6 @@ print dbT.Query("SELECT (id, text) FROM typeTest WHERE id >= h;")
 print
 
 
-
-
 print "Export test, see file exporttest.sql"
 with open("exporttest.sql", "w") as file:
     dbT.ExportAsSQL(file)
