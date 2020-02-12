@@ -1,7 +1,8 @@
 import DBErrors as err          # TODO: UNUSED remove
 import DBResponse
 import SQLInterpreter
-from Table import Table, TypedTable
+
+from Table import TypedTable
 
 
 # ------------------------------------------------------------
@@ -11,53 +12,6 @@ class DataBase:
         self.sqlinterpreter = SQLInterpreter.SQLInterpreter()      # Cleaning SQL and performing actions (?)
         self.tablenames = []                        # List of the table names
         self.tables = {}                            # { name : Table }
-
-    def create_table(self, name, fields, where = None, ret = None):
-        """ Create and add a new table to the database
-        """
-        tbl = Table(fields)
-        self.tables[name] = tbl
-        self.tablenames.append(name)
-        return "Created table: \"" + str(name)+"\""
-
-
-    #
-    def Query(self, query):
-        """ Execute a query """
-        # Interpret SQL
-        # Currently hardcoded to just accept insertion queries
-        ret = DBResponse.DBResponse("None")
-        res = self.sqlinterpreter.TryDecodeSQL(query)
-
-        if res["type"] == "ERROR":
-            return res
-
-        elif res["type"] == "INSERT":
-            ret = self.insert(
-                tbl   = res["table"],
-                fields= res["fields"],
-                values= res["values"],
-                ret   = res["return"]
-            )
-
-        elif res["type"] == "SELECT":
-            ret = self.select(
-                table  = res["table"],
-                fields = res["fields"],
-                where  = res["where"]
-            )
-
-        return ret
-
-
-
-    # TODO: Refactor this function and fix its return value
-    def insert(self, tbl, fields, values, ret):
-        """ Insert a row into a table
-        """
-        if tbl in self.tablenames:
-            res = self.tables[tbl].Insert(fields, values)
-        return res
 
     # TODO: Fix its return if no results are found
     def select(self, table, fields, where):
@@ -72,16 +26,6 @@ class DataBase:
         if table in self.tablenames:
             return self.tables[table].Select(fields = fields, where = where)
         return "SELECT FALSE"
-    #
-    # def create_table(self, name, fields, where = None, ret = None):
-    #     """
-    #
-    #     """
-    #     print "create table"
-    #     self.tables.append(Table(fields, where))
-    #     self.tblnames[name] = len(self.tables)
-    #
-    #     return ret
 
 class TypedDataBase(DataBase):
     # TODO: when creating tables is done using SQL we need to do the following:
@@ -115,9 +59,9 @@ class TypedDataBase(DataBase):
 
         elif res["type"] == "SELECT":
             ret = self.select(
-                table  = res["table"],
-                fields = res["fields"],
-                where  = res["where"]
+                table       = res["table"],
+                fields      = res["fields"],
+                conditions  = res["conditions"]
             )
 
         elif res["type"] == "CREATE TABLE":
@@ -141,6 +85,17 @@ class TypedDataBase(DataBase):
             res = self.tables[tbl].Insert(kvpairs)
 
         return res
+
+    def select(self, table, fields, conditions):
+        """ Select specified fields, of rows where all conditions are met
+        """
+
+        res = err.TABLENOTFOUNDERROR(table)
+        if table in self.tablenames:
+            res = self.tables[table].Select(fields, conditions)
+
+        return res
+
 
     def create_table(self, name, fields):
         """ Adds a TypedTable to the list of tables

@@ -18,6 +18,22 @@ Encrypted skiplist & hashtable?
 
 
 # Changelog:
+version 0.2:
+* Repaired SELECT
+* WHERE now supports the following operators for number values:
+  - =
+  - <=
+  - >=
+* WHERE now supports the following operators for strings:
+  - =
+* Fixed bug that strings are stored with a leading ' ' (space)
+
+version 0.1.6d:
+* Removed support for untyped tables
+* Values for fields that are not given in a query now have default values
+* Introduced Bug: Queried strings have a leading ' ' (space)
+* SELECT queries completely broken
+
 Version 0.1.6.c:
 * Now has full support for 3 data types: INT/FLOAT/TEXT
 * Further refactoring

@@ -16,8 +16,12 @@ createTable = "^CREATE TABLE (.*)\s+\((.*)\);"
 
 # Cleaning regex:
 clean_name = "[\"\\\'\(\s+]"
-clean_field = "\""
+clean_field = "[\"\']"
 
+
+# New SELECT
+select = "SELECT\s+\((.*)\)\s+FROM\s+([a-zA-Z]+)(.*);"
+where = "\s+WHERE\s+(.*)\s+(>=|<=|=|<|>)\s+(..*)"
 
 
 class SQLInterpreter:
@@ -35,12 +39,15 @@ class SQLInterpreter:
         self.clean_name  = re.compile(clean_name)
         self.clean_field = re.compile(clean_field)
 
+        # TODO: TEST
+        self.re_selectNew = re.compile(select)
+        self.re_whereNew = re.compile(where)
+
     # TODO: REFACTOR THIS FUNCTION AND ALL ITS CHILDREN
     def TryDecodeSQL(self, sql):
         """ Try all possible types of queries and return the correct type
 
         """
-        SQL = sql
         # CREATE DATABASE:
 
 
@@ -50,30 +57,22 @@ class SQLInterpreter:
             return out
 
         # INSERT
-        out = self.try_insert(SQL)
+        out = self.try_insert(sql)
         if out["type"] == "INSERT" or out["type"] == "ERROR":
             return out
 
 
         # SELECT
-
-
-
-
-
-
-        # The insert query path:
-
-        out = self.try_select(SQL)
+        out = self.try_select(sql)
         if (out["type"] == "SELECT"):
             return out
-
-        return err.COMMANDNOTFOUNDERROR(SQL)
-
 
         # The update query path:
         # The remove query path:
         # The select query path:
+        return err.COMMANDNOTFOUNDERROR(sql)
+
+
 
     def try_CreateTable(self, sql):
         """ Try to determine whether or not the statement is a CREATE TABLE statement
@@ -105,35 +104,25 @@ class SQLInterpreter:
         """
         ret = rs.SQLNone
 
-        # Check whether or not it is a selection operation
-        res = self.re_select.search(sql)
 
-        # If it is not a SELECT query
+        # See whether or not it is a SELECT query
+        res =  self.re_selectNew.search(sql)
+
         if not res:
             return ret
+        # Check for a WHERE clause
+        wh = self.re_whereNew.search(res.group(3))
 
-        # Check for a WHERE
-        wh = self.re_where.search(sql)
-        where = None
-
-        # If a WHERE clause exists
+        conditions = []
         if wh:
-            # Remove the WHERE from the initial query:
-            sql = self.re_where.sub(";", sql)
+            conditions.append(wh.groups())
 
-            # Properly extract the SELECT
-            res = self.re_select.search(sql)
-
-            # And set the rest list
-            where = self.cleanWhere(wh)
-
-        # Now extract the table and fields from the query
-        ret = rs.SQLResponse("SELECT",
-            table = self.re_clean.sub("", res.group(2)),
-            fields = self.re_clean.sub("", res.group(1)).split(",")
-            )
-
-        ret["where"] = where
+        ret = rs.SQLResponse(
+            type   = "SELECT",                                      # Type
+            table  = self.re_clean.sub("", res.group(2)),           # What table
+            fields = self.re_clean.sub("", res.group(1)).split(",") # Fieldnames
+        )
+        ret["conditions"] = conditions
 
         return ret
 
@@ -150,6 +139,11 @@ class SQLInterpreter:
             # Split the fields & values into keyvalue pairs
             fields = [self.clean_name .sub("", f) for f in res.group(2).split(",")]
             values = [self.clean_field.sub("", f) for f in res.group(3).split(",")]
+
+            # TODO: Is this correct?
+            for i in range(len(values)):
+                if values[i][0] == " ":
+                    values[i] = values[i][1:]
 
             # Combine cleaned fields into pairs
             kvpairs = zip(fields,values)
