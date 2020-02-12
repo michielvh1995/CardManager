@@ -4,36 +4,15 @@ import SQLInterpreter
 
 from Table import TypedTable
 
-
-# ------------------------------------------------------------
-class DataBase:
-    def __init__(self, passwd = None):
-        # Necessary?
-        self.sqlinterpreter = SQLInterpreter.SQLInterpreter()      # Cleaning SQL and performing actions (?)
-        self.tablenames = []                        # List of the table names
-        self.tables = {}                            # { name : Table }
-
-    # TODO: Fix its return if no results are found
-    def select(self, table, fields, where):
-        """ Gather data of the specified fields in the specified table
-        input:
-            table   :   str     :   The name of the table from which data is requested
-            fields  :  [str]    :   List of fieldnames of which data is requested
-            where   :[str,value]:   List of fieldnames and values on which the data is filtered
-        returns     :  [Row]    :   List of list with the requested data
-
-        """
-        if table in self.tablenames:
-            return self.tables[table].Select(fields = fields, where = where)
-        return "SELECT FALSE"
-
-class TypedDataBase(DataBase):
+class TypedDataBase:
     # TODO: when creating tables is done using SQL we need to do the following:
     # When creating tables the return value of create table (from the Table class) becomes a DBresponse
     # Thus error checking needs to be done in the DataBase class as well
     # For now we assume that creating tables is always done correctly
     def __init__(self, name = None, passwd = None):
-        DataBase.__init__(self, passwd)
+        self.sqlinterpreter = SQLInterpreter.SQLInterpreter()      # Cleaning SQL and performing actions (?)
+        self.tablenames = []                        # List of the table names
+        self.tables = {}                            # { name : Table }
         self.name = name
 
     def Query(self, query):

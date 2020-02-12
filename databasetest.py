@@ -1,4 +1,4 @@
-from Tools.Database.Database import DataBase, TypedDataBase
+from Tools.Database.Database import TypedDataBase
 # ===================================================
 # Debugging
 # ===================================================

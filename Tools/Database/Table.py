@@ -3,54 +3,32 @@ import DBResponse as res
 
 from Types import typeTable, TypeCaster
 
-
-
-class Table:
-    def __init__(self, fieldnames, where=None):
-        self.fields = fieldnames    #
-        self.header = []        # The field names
-        self.rows = []          # [{name: field}]
-
-        for f in self.fields:
-            self.header.append(f)
-
-
-    # TODO: REPAIR THIS
-    def Select(self, fields, tableName = None, where = None):
-        """ Check if all names are in the fields and return the values of the rows per field
-        """
-        out = []
-        for row in self.rows:
-            r = []
-            use = True
-            if where:
-                for pair in where:
-                    if row.has_key(pair[0]):
-                        if not row[pair[0]] == pair[1]:
-                            use = False
-                    else:
-                        return err.KEYNOTFOUNDERROR(pair[0])
-
-            # Match the WHERE
-
-            # Select fields per row
-            if use:
-                for n in fields:
-                    if row.has_key(n):
-                        r.append(row[n])
-                    else:
-                        return err.KEYNOTFOUNDERROR(n)
-                out.append(r)
-        return out
-
-
-class TypedTable(Table):
+class TypedTable:
     def __init__(self):
         self.name = "None"
 
         # For setting default values per field
         self.defaults = {}
         self.defaultsSet = []
+
+    def TryCreateTable(self, name, fields):
+        """ TODO: Description
+        """
+        # Check if all types exist, if one doesn't raise an error
+        for field in fields.keys():
+            if not fields[field] in typeTable:
+                return err.TYPENOTFOUNDERROR(fields[field])
+
+        self.name   = name
+        self.fields = fields
+        self.rows   = []
+        self.caster = TypeCaster()
+
+        return res.DBResponse(
+            type      = "SUCCESS",
+            operation = "CREATE TABLE",
+            table     = name
+        )
 
     # TODO: Refactor for speed
     # TODO: Add support for other type of conditions than WHERE
@@ -100,26 +78,6 @@ class TypedTable(Table):
                 # If the row is usable
                 out.append(r)
         return out
-
-
-    def TryCreateTable(self, name, fields):
-        """ TODO: Description
-        """
-        # Check if all types exist, if one doesn't raise an error
-        for field in fields.keys():
-            if not fields[field] in typeTable:
-                return err.TYPENOTFOUNDERROR(fields[field])
-
-        self.name   = name
-        self.fields = fields
-        self.rows   = []
-        self.caster = TypeCaster()
-
-        return res.DBResponse(
-            type      = "SUCCESS",
-            operation = "CREATE TABLE",
-            table     = name
-        )
 
     def Insert(self, kvpairs):
         """ Check whether if the items in the row are of the correct type and insert them
