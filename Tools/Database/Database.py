@@ -97,41 +97,78 @@ class TypedDataBase:
         return res
 
 
-    def ExportAsSQL(self, filestream):
+    def ExportAsSQL(self, filestream, encoding = "LINUX"):
         """ Exports the database as a list of SQL statements to an active filestream
         input:
             filestream  : file    : A python filestream to write to
         returns:
             None
         """
+        nl = "\r\n"
+        if encoding == "LINUX":
+            nl = "\n"
+        elif encoding == "WINDOWS":
+            nl = "\r\n"
+
         # Create DB:
-        filestream.write("--Create database:\r\n")
-        filestream.write("CREATE DATABASE " + str(self.name) + ";\r\n")
+        filestream.write("--Create database:" + nl)
+        filestream.write("CREATE DATABASE " + str(self.name) + ";" + nl)
 
         # Create Tables:
-        filestream.write("\r\n--Create tables:\r\n")
+        filestream.write(nl + "--Create tables:" + nl)
         for name in self.tablenames:
-            filestream.write("CREATE TABLE " + str(name) + " (\r\n")
+            filestream.write("CREATE TABLE " + str(name) + " (")
 
             # Creating all fields of the tables
             for i, field in enumerate(self.tables[name].fields.keys()):
-                filestream.write("     "+ str(field) + " " +
+                filestream.write(str(field) + " " +
                     str(self.tables[name].fields[field]) +
-                    (",\r\n" if i+1 < len(self.tables[name].fields.keys()) else ""))
-            filestream.write("\r\n);\r\n")
+                    (", " if i+1 < len(self.tables[name].fields.keys()) else ""))
+            filestream.write(");" + nl)
 
         # The data of each table:
-        filestream.write("\r\n--Fill in the data of each table:\r\n")
+        filestream.write(nl + "--Fill in the data of each table:" + nl)
         for table in self.tablenames:               # Export per table:
             for row in self.tables[table].rows:     # Export each row
                 fields = row.keys()                 # Not each row has a value for all the keys
 
-                values = ", ".join(map(str,[row[key] for key in fields ]))
-                line = "INSERT INTO " +table+" ("+ ', '.join(map(str, fields)) +")"+"  VALUES ("+values+");"
-                filestream.write(line + "\r\n")
+                values = "', '".join(map(str,[row[key] for key in fields ]))
+                line = "INSERT INTO " +table+" ('"+ "', '".join(map(str, fields)) +"')"+"  VALUES ('"+values+"');"
+                print line
+                filestream.write(line + "" + nl)
 
+        print
     def ImportSQL(self, filestream):
         """ Import a database from a SQL file
+        input:
+            filestream  : file    : A python filestream to write to
+        returns:
+            Not sure yet
         """
+
+        lines = filestream.read().split("\n")
+
+        for i in lines:
+            ci =  self.sqlinterpreter.CleanSQL(i)
+            if len(ci) > 2:
+                ret = self.Query(ci)
+
+                if ret["type"] == "ERROR":
+                    return ret
+
+                print ret
+                
+        res = DBResponse.DBResponse("SUCCESS")
+        return res
+
+    def CheckLine(self, line):
+        """ Prepare the line of a file for being used as a query
+        """
+        if len(line) < 2:
+            return False
+        print len(line)
+        if line[0] == line[1] == "-" or line[0] == "\n" or line[0] == "\r":
+            return False
+
 
         # Step 1: read the file until the first CREATE DATABASE

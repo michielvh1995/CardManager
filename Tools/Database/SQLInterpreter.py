@@ -2,8 +2,7 @@ import re
 import DBErrors as err
 import DBResponse as rs
 
-insert_str = "^INSERT INTO (.*) \((.*)\) VALUES \((.*)\);"
-select_str = "^SELECT \((.*)\) FROM (.*)[ ;]"
+insert_str = "INSERT INTO\s+(.*)\s+\((.*)\)\s+VALUES\s+\((.*)\);"
 
 where_str = " ?(WHERE|AND|OR) [\'\(](.*)[\'\)] = (.*)[ ;]"
 
@@ -17,19 +16,19 @@ createTable = "^CREATE TABLE (.*)\s+\((.*)\);"
 # Cleaning regex:
 clean_name = "[\"\\\'\(\s+]"
 clean_field = "[\"\']"
-
+clean_comment = "[^\"]*(\"[^\"]*\"[^\"]*)*(--.*)"
 
 # New SELECT
 select = "SELECT\s+\((.*)\)\s+FROM\s+([a-zA-Z]+)(.*);"
 where = "\s+WHERE\s+(.*)\s+(>=|<=|=|<|>)\s+(..*)"
 
 
+
+
 class SQLInterpreter:
     def __init__(self):
         self.re_table = re.compile(createTable)
-
         self.re_insert = re.compile(insert_str)
-        self.re_select = re.compile(select_str)
 
         self.re_where = re.compile(where_str)
 
@@ -48,6 +47,7 @@ class SQLInterpreter:
         """ Try all possible types of queries and return the correct type
 
         """
+        sql = self.CleanSQL(sql)
         # CREATE DATABASE:
 
 
@@ -156,6 +156,31 @@ class SQLInterpreter:
             )
 
         return out
+
+    # ------------------------------------------------------------------
+    # Cleaning
+    # ------------------------------------------------------------------
+    def CleanSQL(self, sql):
+        """ Clean a SQL statement of all kinds of impurities
+        """
+        sql = self.cleanComments(sql)
+
+        return sql
+
+    def cleanComments(self, sql):
+        """ Cleans comments from a sql query
+        """
+        m = re.match(clean_comment, sql)
+
+        sqln = sql
+
+        # Continuously remove comment sections
+        while m:
+            sqln = sqln[:sql.find(m.group(2))]
+            m = re.match(clean_comment, sqln)
+
+        return sqln
+
 
     def cleanWhere(self, resrch):
         """ TODO: This function cleans the WHERE statement to a useful list of (key, value) pairs

@@ -18,6 +18,9 @@ Encrypted skiplist & hashtable?
 
 
 # Changelog:
+version 0.2.1a:
+* Now allows for importing from files; only accepts inputs from a single line
+
 version 0.2:
 * Repaired SELECT
 * WHERE now supports the following operators for number values:
@@ -77,7 +80,6 @@ Version 0.1.1:
 
 # TODO:
 * Rewrite database logic in C/C++
-* Refactor the SQLResponse to make better use of WHERE
 
 ## Python TODO (NEW!):
 ### Tier 1:
