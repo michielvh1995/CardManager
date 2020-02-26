@@ -15,6 +15,26 @@ class TypedDataBase:
         self.tables = {}                            # { name : Table }
         self.name = name
 
+        # Multi-line SQL commands
+        self.lastcommand = ""
+
+    def InputSQL(self, input):
+        """ Allows text to be inputted
+        """
+        # Append the lastcommand var
+        self.lastcommand += input
+        self.lastcommand = self.sqlinterpreter.CleanSQL(self.lastcommand)
+
+        res = self.sqlinterpreter.IsComplete(self.lastcommand)
+
+        # Check for completeness and execute the query if it is
+        if res["type"] == "COMPLETE":
+            self.lastcommand = "" # Reset last command
+            return self.Query(res["query"])
+
+        # if the command isn't complete, just wait
+        return res
+
     def Query(self, query):
         """ Execute a query
         input:
@@ -29,6 +49,9 @@ class TypedDataBase:
 
         if res["type"] == "ERROR":
             return res
+
+        elif res["type"] == "INCOMPLETE":   # For multiline SQL queries
+            self.lastcommand += res["query"]
 
         elif res["type"] == "INSERT":
             ret = self.insert(
@@ -96,13 +119,15 @@ class TypedDataBase:
 
         return res
 
-
+    # ===================================================
+    # File Operations
+    # ===================================================
     def ExportAsSQL(self, filestream, encoding = "LINUX"):
         """ Exports the database as a list of SQL statements to an active filestream
         input:
             filestream  : file    : A python filestream to write to
         returns:
-            None
+            DBResponse  : An acknowledge or an error, depending on if everything went right
         """
         nl = "\r\n"
         if encoding == "LINUX":
@@ -112,18 +137,18 @@ class TypedDataBase:
 
         # Create DB:
         filestream.write("--Create database:" + nl)
-        filestream.write("CREATE DATABASE " + str(self.name) + ";" + nl)
+        filestream.write("--CREATE DATABASE " + str(self.name) + ";" + nl)
 
         # Create Tables:
         filestream.write(nl + "--Create tables:" + nl)
         for name in self.tablenames:
-            filestream.write("CREATE TABLE " + str(name) + " (")
+            filestream.write("CREATE TABLE " + str(name) + " (" +nl)
 
             # Creating all fields of the tables
             for i, field in enumerate(self.tables[name].fields.keys()):
-                filestream.write(str(field) + " " +
+                filestream.write("    " + str(field) + " " +
                     str(self.tables[name].fields[field]) +
-                    (", " if i+1 < len(self.tables[name].fields.keys()) else ""))
+                    ("," +nl if i+1 < len(self.tables[name].fields.keys()) else nl))
             filestream.write(");" + nl)
 
         # The data of each table:
@@ -133,11 +158,12 @@ class TypedDataBase:
                 fields = row.keys()                 # Not each row has a value for all the keys
 
                 values = "', '".join(map(str,[row[key] for key in fields ]))
-                line = "INSERT INTO " +table+" ('"+ "', '".join(map(str, fields)) +"')"+"  VALUES ('"+values+"');"
-                print line
+                line = "INSERT INTO " +table+" ('"+ "', '".join(map(str, fields)) +"')" + nl +"    VALUES ('"+values+"');"
                 filestream.write(line + "" + nl)
 
+        return DBResponse.DBResponse("EXPORT COMPLETE")
         print
+
     def ImportSQL(self, filestream):
         """ Import a database from a SQL file
         input:
@@ -149,26 +175,11 @@ class TypedDataBase:
         lines = filestream.read().split("\n")
 
         for i in lines:
-            ci =  self.sqlinterpreter.CleanSQL(i)
-            if len(ci) > 2:
-                ret = self.Query(ci)
+            ret = self.InputSQL(i)
 
-                if ret["type"] == "ERROR":
-                    return ret
+            if ret["type"] == "ERROR":
+                return ret
 
-                print ret
-                
-        res = DBResponse.DBResponse("SUCCESS")
+
+        res = DBResponse.DBResponse("IMPORT COMPLETE")
         return res
-
-    def CheckLine(self, line):
-        """ Prepare the line of a file for being used as a query
-        """
-        if len(line) < 2:
-            return False
-        print len(line)
-        if line[0] == line[1] == "-" or line[0] == "\n" or line[0] == "\r":
-            return False
-
-
-        # Step 1: read the file until the first CREATE DATABASE

@@ -18,6 +18,17 @@ Encrypted skiplist & hashtable?
 
 
 # Changelog:
+version 0.3.1:
+* Now allows for a single tbale to be updated on the drive
+
+version 0.3:
+* We can store and retrieve databases in files
+
+version 0.2.1b:
+* Now accepts multiline inputs
+* Made export prettier
+* There is a bug where queries with "--" or ";" in strings are cut off ignored
+
 version 0.2.1a:
 * Now allows for importing from files; only accepts inputs from a single line
 
@@ -81,24 +92,16 @@ Version 0.1.1:
 # TODO:
 * Rewrite database logic in C/C++
 
-## Python TODO (NEW!):
-### Tier 1:
-  * Loading and storing of a database
-  * Have strings keep their spaces and allow for escaped characters (\' => ')
-  * Filestoring:
-    - Import database from SQL file
-
-### Tier 2:
-  * Store the database as a file on the PC that allows for data "streaming"
-
-
 ## Python TODO:
+### Tier 0.5: The sub-TODOs of Tier1
+  * Mark database entries as dirty, for more efficient implementation
+  * Implement PRIMARY KEY constraints
+
 ### Tier 1:
-  * Save databases/tables on the harddrive
-  * Load databases from a file
+  * Store the database as a file on the PC that allows for data "streaming"
+  * Have strings keep their spaces and allow for escaped characters (\' => ')
 
 ### Tier 2:
-  * Append database files without having to load the entire DB (might/will be broken with encryption)
   * Make it into a deamon
 
 ### Tier 2.5:

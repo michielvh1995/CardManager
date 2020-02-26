@@ -28,8 +28,7 @@ class DBResponse(Response):
 
 
 class SQLResponse(Response):
-    def __init__(self, type, table = None, fields = None, returnquery = None ):
-
+    def __init__(self, type, table = None, fields = None, returnquery = None):
         self.internal = {
             "type": type,
             "table" : table,
@@ -37,7 +36,38 @@ class SQLResponse(Response):
             "return" : returnquery
         }
 
+class SQLIncomplete(SQLResponse):
+    def __init__(self, query, table = None, fields = None, returnquery = None):
+        self.internal = {
+            "type": "INCOMPLETE",
+            "table" : table,
+            "fields" : fields,
+            "return" : returnquery,
+            "query"  : query
+        }
+
+class SQLComplete(SQLResponse):
+    def __init__(self, query, table = None, fields = None, returnquery = None):
+        self.internal = {
+            "type": "COMPLETE",
+            "table" : table,
+            "fields" : fields,
+            "return" : returnquery,
+            "query"  : query
+        }
 
 
+class FILESysAcknowledge(Response):
+    def __init__(self, file = None, operation = None, position = None):
+        self.internal = {
+            "type" : "ACKNOWLEDGE",
+            "file" : file,
+            "operation" : operation,
+            "position"  : position
+        }
+
+# ---------------------------------------------------------------------------
+# Standard responses
+# ---------------------------------------------------------------------------
 
 SQLNone = SQLResponse("NONE")

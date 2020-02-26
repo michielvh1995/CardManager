@@ -16,11 +16,14 @@ createTable = "^CREATE TABLE (.*)\s+\((.*)\);"
 # Cleaning regex:
 clean_name = "[\"\\\'\(\s+]"
 clean_field = "[\"\']"
-clean_comment = "[^\"]*(\"[^\"]*\"[^\"]*)*(--.*)"
+clean_comment = "[^\"]*(\"[^\"]*\"[^\"]*)*(--.*)"           # BUG: fires off even numbers of "" as well
 
 # New SELECT
 select = "SELECT\s+\((.*)\)\s+FROM\s+([a-zA-Z]+)(.*);"
 where = "\s+WHERE\s+(.*)\s+(>=|<=|=|<|>)\s+(..*)"
+
+# Checks
+complete = "[^\"^\']*([\"\'][^\"^\']*\"[^\"^\']*)*(.*);"    # BUG: fires off even numbers of "" as well
 
 
 
@@ -38,6 +41,9 @@ class SQLInterpreter:
         self.clean_name  = re.compile(clean_name)
         self.clean_field = re.compile(clean_field)
 
+
+        self.re_complete = re.compile(complete)
+
         # TODO: TEST
         self.re_selectNew = re.compile(select)
         self.re_whereNew = re.compile(where)
@@ -47,7 +53,9 @@ class SQLInterpreter:
         """ Try all possible types of queries and return the correct type
 
         """
+        # Clean the SQL query from comments and such
         sql = self.CleanSQL(sql)
+
         # CREATE DATABASE:
 
 
@@ -157,6 +165,22 @@ class SQLInterpreter:
 
         return out
 
+    def IsComplete(self, sql):
+        """ TODO: Description
+        """
+
+        # Clean the SQL query from comments and such
+        sqln = self.CleanSQL(sql)
+
+        m = self.re_complete.match(sql)
+
+        if m:
+            return rs.SQLComplete(sqln)
+
+        ret = rs.SQLIncomplete(sqln)
+        return ret
+
+
     # ------------------------------------------------------------------
     # Cleaning
     # ------------------------------------------------------------------
@@ -168,7 +192,9 @@ class SQLInterpreter:
         return sql
 
     def cleanComments(self, sql):
-        """ Cleans comments from a sql query
+        """ Look for any sequence "--" with an even amount of \' and \" in front of it
+        input:
+            sql     :   string      : The SQL query to be cleaned
         """
         m = re.match(clean_comment, sql)
 
@@ -176,9 +202,8 @@ class SQLInterpreter:
 
         # Continuously remove comment sections
         while m:
-            sqln = sqln[:sql.find(m.group(2))]
-            m = re.match(clean_comment, sqln)
-
+            sqln = sqln[:sql.find(m.group(2))]  # Subset the string
+            m = re.match(clean_comment, sqln)   # Get the new match object of the result string
         return sqln
 
 
