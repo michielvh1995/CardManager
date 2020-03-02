@@ -15,14 +15,23 @@ class TypedTable:
         """ TODO: Description
         """
         # Check if all types exist, if one doesn't raise an error
+        fbuild = {}
         for field in fields.keys():
-            if not fields[field] in typeTable:
-                return err.TYPENOTFOUNDERROR(fields[field])
+            if not fields[field][0] in typeTable:
+                return err.TYPENOTFOUNDERROR(fields[field][0])
+            fbuild[field] = fields[field][0]
+
 
         self.name   = name
-        self.fields = fields
+        self.fields = fbuild    # Fields & types
         self.rows   = []
         self.caster = TypeCaster()
+
+        # Set constraints
+        self.primary = "ID"
+        self.setConstraints(fields)
+
+        self.primaryIndex = {}  # Elke insert krijgt de primary key hier + de index ervan in de rows
 
         return res.DBResponse(
             type      = "SUCCESS",
@@ -92,19 +101,93 @@ class TypedTable:
             # Check typing and add to row
             if not self.fields[key] == "TEXT":
                 type, cast = self.caster.TypeCast(value)
-                if type == self.fields[key]:
-                    row[key]    = cast
+                if type == self.fields[key]:    # Check for correct type
+                    row[key] = cast
                 else:
                     return err.TYPEERROR(key, self.fields[key], type)
-            else: # Ignore typing if field type is text
-                row[key]    = value
+            # Ignore typing if field type is text
+            else:
+                row[key]     = value
 
-        for key in self.fields.keys():               # Fill in the default values for all empty keys
+        for key in self.fields.keys():          # Fill in the default values for all empty keys
             if not row.has_key(key):
                 row[key] = self.Defaults(key)
 
         self.rows.append(row)
         return res.DBResponse("SUCCESS", operation = "INSERT", table = self.name)
+
+    def ConstraintInsert(self, kvpairs):
+        """ Check whether if the items in the row are of the correct type and insert them
+        TODO: Write explanation
+        """
+        row = {}
+
+        # Check whether the table has the key and ifso insert into row
+        for key, value in kvpairs:
+            if not self.fields.has_key(key):    # Check if key exists
+                return err.KEYNOTFOUNDERROR(key, self.name)
+
+            # Now check all constraints
+            for constraint in self.consts[key]:
+                if not constraint(value):
+                    # TODO
+                    print (key, value)
+                    return err.ERROR(text = "VIOLATED CONSTRAINT")
+
+            # TODO: Properly do the casting
+            cast = value
+            if not self.fields[key] == "TEXT":
+                type, cast = self.caster.TypeCast(value)
+            row[key] = cast
+
+        for key in self.fields.keys():          # Fill in the default values for all empty keys
+            if not row.has_key(key):
+                row[key] = self.Defaults(key)
+
+        self.rows.append(row)
+        return res.DBResponse("SUCCESS", operation = "INSERT", table = self.name)
+
+
+    def setConstraints(self, constraints):
+        """ Fills in a list of lambda functions for each of the fields
+        input:
+            TODO
+        returns:
+            DBResponse  :   The response of filling in the constraints; can be a type error
+        """
+        self.consts = {}
+
+        for field in constraints.keys():
+            funcs = []
+
+            # Check the type consrtaint
+            if not constraints[field][0] in typeTable:
+                return err.TYPENOTFOUNDERROR(constraints[field][0])
+
+            # Set the type constraint
+            # type, cast = self.caster.TypeCast(value)
+            print constraints[field][0]
+            f = None
+            if constraints[field][0] == "TEXT":
+                f = lambda x: True
+            else:
+                f = lambda x: self.caster.TypeCast(x)[0] == constraints[field][0]
+
+            funcs.append(f)
+
+            # The other constraitns
+            for c in constraints[field][1:]:
+                # primary:
+                funcs.append(lambda x: not x in self.primaryIndex.keys())
+
+                continue
+
+            self.consts[field] = funcs
+
+        return res.Response("ACC")
+
+
+
 
     def Defaults(self, field):
         """ Returns the default value for a given field

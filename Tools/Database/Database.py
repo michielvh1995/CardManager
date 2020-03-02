@@ -83,8 +83,9 @@ class TypedDataBase:
         """
         res = err.TABLENOTFOUNDERROR(tbl)
 
+        # TODO: THIS IS A TEST
         if tbl in self.tablenames:
-            res = self.tables[tbl].Insert(kvpairs)
+            res = self.tables[tbl].ConstraintInsert(kvpairs)
 
         return res
 
@@ -103,7 +104,7 @@ class TypedDataBase:
         """ Adds a TypedTable to the list of tables
         input:
             name        : string            : name of the table
-            fields      : {string, string}  : dictionary of field names and their constraints (type is one)
+            fields      : {string, [string]}: dictionary of field names and their constraints (type is one)
             constraints : [TBD]             : A set of constraints for the values in the table (i.e. primary keys)
         returns:
             DBResponse  : confirmation or error message

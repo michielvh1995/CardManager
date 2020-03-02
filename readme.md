@@ -19,7 +19,7 @@ Encrypted skiplist & hashtable?
 
 # Changelog:
 version 0.3.1:
-* Now allows for a single tbale to be updated on the drive
+* Now allows for a single table to be updated on the drive
 
 version 0.3:
 * We can store and retrieve databases in files

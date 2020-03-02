@@ -94,9 +94,10 @@ class SQLInterpreter:
             fields = regex_result.group(2).split(",")   # Break fields up in field constraint tuples
             fields = [f.split() for f in fields]
 
+            # Register the constraints and turn it into a dict
             fdict = {}
             for f in fields:
-                fdict[f[0]] = f[1]
+                fdict[f[0]] = f[1:]
 
             ret = rs.SQLResponse(
                 type = "CREATE TABLE",

@@ -105,17 +105,37 @@ def FileStore():
     return fs.Read()
 
 # ---------------------------------------------------------------------------
+# Constraints
+# ---------------------------------------------------------------------------
+def PrimaryTable(tablename):
+    print "Create table query with field types:"
+    print dbT.Query("CREATE TABLE " + tablename + " (id INT PRIMARY, text TEXT, other TEXT);")
+    print
+
+    print "Correct typing:"
+    print dbT.Query('INSERT INTO ' + tablename + ' ("id", "text") VALUES (1, "testtext");')
+    print dbT.Query('INSERT INTO ' + tablename + ' ("id", "text") VALUES (2, "Met spatie?");')
+    print dbT.Query('INSERT INTO ' + tablename + ' ("id", "text") VALUES (3, "Andere text");')
+    print dbT.Query('INSERT INTO ' + tablename + ' ("id", "text") VALUES (4, "Incluus cijfers 123");')
+    print
+
+    print "Incorrectly typed"
+    print dbT.Query('INSERT INTO ' + tablename + ' ("id", "text") VALUES ("a", "testtext");')
+    print
+
+    print dbT.tables[tablename].rows
+
+
+
+# ---------------------------------------------------------------------------
 # Function calls
 # ---------------------------------------------------------------------------
 
 
-InsertTest("typeTest")
-InsertTest("jank")
+PrimaryTable("typeTest")
+#InsertTest("jank")
 #MultilineQueries("typeTest")
-db = FileStore()
-
-for res in db.Query("SELECT (id, text, other) FROM typeTest;"):
-    print res
+#db = FileStore()
 
 #FromFile()
 #ToFile()
