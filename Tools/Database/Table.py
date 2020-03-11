@@ -89,8 +89,9 @@ class TypedTable:
         return out
 
     def Insert(self, kvpairs):
-        """ Check whether if the items in the row are of the correct type and insert them
+        """ Check for uniqueness in the primary key and types, then finally add the type-cast value to the db
         """
+
         row = {}
 
         # Check whether the table has the key and ifso insert into row
@@ -98,55 +99,30 @@ class TypedTable:
             if not self.fields.has_key(key):    # Check if key exists
                 return err.KEYNOTFOUNDERROR(key, self.name)
 
-            # Check typing and add to row
-            if not self.fields[key] == "TEXT":
-                type, cast = self.caster.TypeCast(value)
-                if type == self.fields[key]:    # Check for correct type
-                    row[key] = cast
+                # Check for primary uniqueness
+                if key == self.primary:
+                    if value in self.self.primaryIndex.keys():
+                        # TODO: Raise proper error
+                        return err.ERROR(text = "Tried to insert not-unique primary key!")
+
+                # Check types and typecast
+                if not self.fields[key] == "TEXT":
+                    type, cast = self.caster.TypeCast(value)
+                    if type == self.fields[key]:    # Check for correct type
+                        row[key] = cast
+                    else:
+                        return err.TYPEERROR(key, self.fields[key], type)
                 else:
-                    return err.TYPEERROR(key, self.fields[key], type)
-            # Ignore typing if field type is text
-            else:
-                row[key]     = value
+                    row[key]     = value
 
-        for key in self.fields.keys():          # Fill in the default values for all empty keys
+        # Now fill up the missed keys in the row
+        for key in self.fields.keys():
             if not row.has_key(key):
                 row[key] = self.Defaults(key)
 
+        # Finally add the row to the database
         self.rows.append(row)
         return res.DBResponse("SUCCESS", operation = "INSERT", table = self.name)
-
-    def ConstraintInsert(self, kvpairs):
-        """ Check whether if the items in the row are of the correct type and insert them
-        TODO: Write explanation
-        """
-        row = {}
-
-        # Check whether the table has the key and ifso insert into row
-        for key, value in kvpairs:
-            if not self.fields.has_key(key):    # Check if key exists
-                return err.KEYNOTFOUNDERROR(key, self.name)
-
-            # Now check all constraints
-            for constraint in self.consts[key]:
-                if not constraint(value):
-                    # TODO
-                    print (key, value)
-                    return err.ERROR(text = "VIOLATED CONSTRAINT")
-
-            # TODO: Properly do the casting
-            cast = value
-            if not self.fields[key] == "TEXT":
-                type, cast = self.caster.TypeCast(value)
-            row[key] = cast
-
-        for key in self.fields.keys():          # Fill in the default values for all empty keys
-            if not row.has_key(key):
-                row[key] = self.Defaults(key)
-
-        self.rows.append(row)
-        return res.DBResponse("SUCCESS", operation = "INSERT", table = self.name)
-
 
     def setConstraints(self, constraints):
         """ Fills in a list of lambda functions for each of the fields

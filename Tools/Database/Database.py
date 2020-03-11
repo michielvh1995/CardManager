@@ -85,7 +85,7 @@ class TypedDataBase:
 
         # TODO: THIS IS A TEST
         if tbl in self.tablenames:
-            res = self.tables[tbl].ConstraintInsert(kvpairs)
+            res = self.tables[tbl].Insert(kvpairs)
 
         return res
 
