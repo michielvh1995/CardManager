@@ -18,6 +18,9 @@ Encrypted skiplist & hashtable?
 
 
 # Changelog:
+version 0.3.2:
+* Now refactoring the file writing and reading to a binary format
+
 version 0.3.1:
 * Now allows for a single table to be updated on the drive
 
